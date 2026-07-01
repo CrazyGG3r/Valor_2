@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://c3ok7uk1s05o8"]
+
+[ext_resource type="Texture2D" uid="uid://bl5m2beo762mi" path="res://Tilemap.png" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b201jxalv8yne" path="res://Player/player.tscn" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://cbhuknsgp1kwf" path="res://scripts/camera_3d.gd" id="3_h2yge"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0xm2m"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_h2yge"]
+sky_material = SubResource("ProceduralSkyMaterial_0xm2m")
+
+[sub_resource type="Environment" id="Environment_1bvp3"]
+background_mode = 2
+sky = SubResource("Sky_h2yge")
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_xb0p8"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p5jgp"]
+albedo_texture = ExtResource("1_ig7tw")
+roughness_texture = ExtResource("1_ig7tw")
+uv1_scale = Vector3(100, 100, 100)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_0xm2m"]
+data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
+
+[node name="main" type="Node3D" unique_id=642484482]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1201024782]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1289559156]
+environment = SubResource("Environment_1bvp3")
+
+[node name="floor" type="StaticBody3D" parent="." unique_id=1710175603]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="floor" unique_id=844483339]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -0.04077387, -0.05394745, 0.08244324)
+mesh = SubResource("PlaneMesh_xb0p8")
+surface_material_override/0 = SubResource("StandardMaterial3D_p5jgp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="floor" unique_id=2008518449]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, -0.04077387, -0.05394745, 0.08244324)
+visible = false
+shape = SubResource("ConcavePolygonShape3D_0xm2m")
+
+[node name="Player" parent="." unique_id=641735159 instance=ExtResource("2_0xm2m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5472081, 0.94605255, 0.30609822)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1430595695]
+transform = Transform3D(1, 0, 0, 0, 0.7807059, 0.6248986, 0, -0.6248986, 0.7807059, 0.67804575, 3.4332993, 4.1805973)
+script = ExtResource("3_h2yge")
