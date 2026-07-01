@@ -1,5 +1,21 @@
 [gd_scene format=3 uid="uid://by53cs0pofken"]
 
-[node name="Node3D" type="CharacterBody3D" unique_id=1254779307]
+[ext_resource type="Texture2D" uid="uid://cgutcfiftbgx7" path="res://Assets/tilempas/b2.png" id="1_gjkq0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_avcr5"]
+albedo_texture = ExtResource("1_gjkq0")
+uv1_scale = Vector3(10, 2, 0)
+
+[sub_resource type="TorusMesh" id="TorusMesh_y4jlb"]
+material = SubResource("StandardMaterial3D_avcr5")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_m2bhi"]
+
+[node name="Enemy" type="CharacterBody3D" unique_id=1254779307]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1886087656]
+mesh = SubResource("TorusMesh_y4jlb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=135158806]
+transform = Transform3D(2.02, 0, 0, 0, 2.02, 0, 0, 0, 2.02, 0, 0, 0)
+shape = SubResource("SphereShape3D_m2bhi")
