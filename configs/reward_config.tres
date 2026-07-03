@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RewardConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/reward_config.gd" id="1_rwcfg"]
+
+[resource]
+script = ExtResource("1_rwcfg")
+survive_per_second = 0.1
+kill = 1.0
+damage_taken = -0.05
+death = -10.0
+wave_survived = 2.0
+xp_collected = 0.5
+level_up = 5.0
+damage_dealt = 0.02

@@ -1,6 +1,10 @@
 [gd_scene format=3 uid="uid://by53cs0pofken"]
 
 [ext_resource type="Texture2D" uid="uid://cgutcfiftbgx7" path="res://Assets/tilempas/b2.png" id="1_gjkq0"]
+[ext_resource type="Script" path="res://Entities/enemy_base.gd" id="2_enemy"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="3_hlth"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="4_hurtb"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="5_hitbx"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_avcr5"]
 albedo_texture = ExtResource("1_gjkq0")
@@ -11,7 +15,16 @@ material = SubResource("StandardMaterial3D_avcr5")
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_m2bhi"]
 
-[node name="Enemy" type="CharacterBody3D" unique_id=1254779307]
+[sub_resource type="SphereShape3D" id="SphereShape3D_hurt"]
+radius = 1.05
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hit"]
+radius = 1.3
+
+[node name="Enemy" type="CharacterBody3D" groups=["enemies"] unique_id=1254779307]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("2_enemy")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1886087656]
 mesh = SubResource("TorusMesh_y4jlb")
@@ -19,3 +32,24 @@ mesh = SubResource("TorusMesh_y4jlb")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=135158806]
 transform = Transform3D(2.02, 0, 0, 0, 2.02, 0, 0, 0, 2.02, 0, 0, 0)
 shape = SubResource("SphereShape3D_m2bhi")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_hlth")
+max_health = 30.0
+
+[node name="Hurtbox" type="Area3D" parent="."]
+script = ExtResource("4_hurtb")
+faction = &"enemy"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
+shape = SubResource("SphereShape3D_hurt")
+
+[node name="ContactHitbox" type="Area3D" parent="."]
+script = ExtResource("5_hitbx")
+damage = 10.0
+faction = &"enemy"
+continuous = true
+retrigger_interval = 1.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ContactHitbox"]
+shape = SubResource("SphereShape3D_hit")

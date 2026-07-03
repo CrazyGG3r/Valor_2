@@ -2,6 +2,13 @@
 
 [ext_resource type="Script" uid="uid://dyrdsm0ryui6a" path="res://Player/player.gd" id="1_l8h54"]
 [ext_resource type="Texture2D" uid="uid://ooe2qiuluddt" path="res://Assets/tilempas/p.png" id="2_4ntmi"]
+[ext_resource type="Script" path="res://scripts/input/human_input_provider.gd" id="3_hmnpv"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="4_hlth"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="5_hurtb"]
+[ext_resource type="Script" path="res://scripts/components/melee_weapon.gd" id="6_melee"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="7_hitbx"]
+[ext_resource type="Script" path="res://scripts/components/projectile_launcher.gd" id="8_lnchr"]
+[ext_resource type="PackedScene" path="res://Entities/projectile.tscn" id="9_proj"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_xb0p8"]
 
@@ -12,7 +19,12 @@ uv2_scale = Vector3(0, 0, 0)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xb0p8"]
 
-[node name="Player" type="CharacterBody3D" unique_id=641735159]
+[sub_resource type="BoxShape3D" id="BoxShape3D_melee"]
+size = Vector3(1.8, 1.4, 1.8)
+
+[node name="Player" type="CharacterBody3D" groups=["player"] unique_id=641735159]
+collision_layer = 2
+collision_mask = 5
 script = ExtResource("1_l8h54")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1643783020]
@@ -21,3 +33,34 @@ surface_material_override/0 = SubResource("StandardMaterial3D_xb0p8")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1036231550]
 shape = SubResource("CapsuleShape3D_xb0p8")
+
+[node name="InputProvider" type="Node" parent="."]
+script = ExtResource("3_hmnpv")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("4_hlth")
+
+[node name="Hurtbox" type="Area3D" parent="."]
+script = ExtResource("5_hurtb")
+faction = &"player"
+invulnerability_time = 0.5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
+shape = SubResource("CapsuleShape3D_xb0p8")
+
+[node name="MeleeWeapon" type="Node3D" parent="."]
+script = ExtResource("6_melee")
+
+[node name="Hitbox" type="Area3D" parent="MeleeWeapon"]
+script = ExtResource("7_hitbx")
+damage = 20.0
+faction = &"player"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeleeWeapon/Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -1.2)
+shape = SubResource("BoxShape3D_melee")
+
+[node name="ProjectileLauncher" type="Node3D" parent="."]
+script = ExtResource("8_lnchr")
+projectile_scene = ExtResource("9_proj")
+faction = &"player"

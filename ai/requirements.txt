@@ -1,0 +1,3 @@
+numpy>=1.26
+torch>=2.2        # required for dqn/ppo; the random baseline runs without it
+tensorboard>=2.16 # optional: nicer training curves (tensorboard --logdir logs)
