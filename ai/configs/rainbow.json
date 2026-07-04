@@ -1,0 +1,27 @@
+{
+  "env": {
+    "port": 11008,
+    "max_episode_steps": 2000
+  },
+  "agent": {
+    "hidden_size": 128,
+    "lr": 6.25e-05,
+    "gamma": 0.99,
+    "buffer_size": 100000,
+    "batch_size": 64,
+    "warmup_steps": 1000,
+    "target_update_every": 1000,
+    "n_step": 3,
+    "atoms": 51,
+    "v_min": -20.0,
+    "v_max": 40.0,
+    "noisy_sigma": 0.5,
+    "priority_alpha": 0.5,
+    "priority_beta_start": 0.4,
+    "priority_beta_steps": 100000,
+    "device": "cpu"
+  },
+  "training": {
+    "checkpoint_every": 25
+  }
+}

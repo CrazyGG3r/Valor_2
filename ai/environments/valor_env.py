@@ -15,7 +15,12 @@ scripts/ai/observation_builder.gd:
     [8]     episode time / 60 s
     [9]     live enemy count / 10
     [10:13] cooldown fractions: melee, shoot, dash (0 = ready)
-    [13:]   MAX_TRACKED_ENEMIES slots of
+    [13]    player level / 10
+    [14]    xp fraction toward next level
+    [15]    upgrade choice pending (0/1)
+    [16:19] pending option encoding: (pool_index + 1) / upgrade_pool_size,
+            0 = empty slot
+    [19:]   MAX_TRACKED_ENEMIES slots of
             [present, local_x / arena_scale, local_z / arena_scale,
              distance / arena_scale]
 """
@@ -30,7 +35,8 @@ from communication.godot_client import GodotClient
 
 MAX_TRACKED_ENEMIES = 5  # must match ObservationBuilder.MAX_TRACKED_ENEMIES
 ENEMY_FEATURES = 4
-ENEMY_SLOTS_OFFSET = 13
+UPGRADE_OPTION_SLOTS = 3
+ENEMY_SLOTS_OFFSET = 19
 OBS_SIZE = ENEMY_SLOTS_OFFSET + MAX_TRACKED_ENEMIES * ENEMY_FEATURES
 
 
@@ -44,17 +50,22 @@ class ValorEnv:
         max_episode_steps: int = 2000,
         arena_scale: float = 20.0,
         max_speed: float = 5.0,
+        upgrade_pool_size: int = 6,
+        agent_name: str = "AI",
     ) -> None:
         self.client = GodotClient(host, port)
         self.max_episode_steps = max_episode_steps
         self.arena_scale = arena_scale
         self.max_speed = max_speed
+        self.upgrade_pool_size = upgrade_pool_size
+        self.agent_name = agent_name
         self._steps = 0
         self._connected = False
 
     def reset(self, seed: int = 0) -> tuple[np.ndarray, dict[str, Any]]:
         self._ensure_connected()
-        response = self.client.request({"type": "reset", "seed": int(seed)})
+        response = self.client.request(
+            {"type": "reset", "seed": int(seed), "agent": self.agent_name})
         self._steps = 0
         return self._flatten(response["observation"]), response.get("info", {})
 
@@ -94,6 +105,14 @@ class ValorEnv:
         vector[10] = cooldowns.get("melee", 0.0)
         vector[11] = cooldowns.get("shoot", 0.0)
         vector[12] = cooldowns.get("dash", 0.0)
+        vector[13] = player.get("level", 1) / 10.0
+        vector[14] = player.get("xp_fraction", 0.0)
+        upgrade = obs.get("upgrade", {})
+        vector[15] = 1.0 if upgrade.get("pending") else 0.0
+        options = upgrade.get("options", [])
+        for slot in range(UPGRADE_OPTION_SLOTS):
+            if slot < len(options) and options[slot] >= 0:
+                vector[16 + slot] = (options[slot] + 1) / max(self.upgrade_pool_size, 1)
         for slot, enemy in enumerate(obs["enemies"][:MAX_TRACKED_ENEMIES]):
             base = ENEMY_SLOTS_OFFSET + slot * ENEMY_FEATURES
             vector[base] = 1.0

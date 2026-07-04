@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UpgradePool" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade_pool.gd" id="1_pool"]
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade.gd" id="2_upg"]
+[ext_resource type="Resource" path="res://configs/upgrades/attack_speed.tres" id="3_as"]
+[ext_resource type="Resource" path="res://configs/upgrades/melee_damage.tres" id="4_md"]
+[ext_resource type="Resource" path="res://configs/upgrades/projectile_damage.tres" id="5_pd"]
+[ext_resource type="Resource" path="res://configs/upgrades/max_health.tres" id="6_mh"]
+[ext_resource type="Resource" path="res://configs/upgrades/move_speed.tres" id="7_ms"]
+[ext_resource type="Resource" path="res://configs/upgrades/dash_cooldown.tres" id="8_dc"]
+
+[resource]
+script = ExtResource("1_pool")
+upgrades = Array[ExtResource("2_upg")]([ExtResource("3_as"), ExtResource("4_md"), ExtResource("5_pd"), ExtResource("6_mh"), ExtResource("7_ms"), ExtResource("8_dc")])

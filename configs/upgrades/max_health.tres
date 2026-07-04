@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Upgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade.gd" id="1_upg"]
+
+[resource]
+script = ExtResource("1_upg")
+id = &"max_health"
+display_name = "Vitality"
+description = "+25 max health (heals the difference)"
+stat = &"max_health"
+operation = 0
+value = 25.0
+max_stacks = 0

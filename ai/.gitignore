@@ -2,5 +2,6 @@ __pycache__/
 *.pyc
 weights/
 logs/
+console_settings.json
 !weights/.gitkeep
 !logs/.gitkeep

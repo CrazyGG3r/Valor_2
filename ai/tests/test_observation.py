@@ -27,6 +27,8 @@ def _fake_observation(enemy_count: int) -> dict:
             "health": 80.0,
             "max_health": 100.0,
             "cooldowns": {"melee": 0.25, "shoot": 0.5, "dash": 1.0},
+            "level": 4,
+            "xp_fraction": 0.5,
         },
         "enemies": [
             {"position": [float(i + 1), 0.0, 0.0], "distance": float(i + 1)}
@@ -35,6 +37,7 @@ def _fake_observation(enemy_count: int) -> dict:
         "enemy_count": enemy_count,
         "wave": 3,
         "time": 30.0,
+        "upgrade": {"pending": True, "options": [2, 0, 5]},
     }
 
 
@@ -48,6 +51,12 @@ def test_flatten_shape_and_values() -> None:
     assert vector[10] == np.float32(0.25)  # melee cooldown
     assert vector[11] == np.float32(0.5)  # shoot cooldown
     assert vector[12] == np.float32(1.0)  # dash cooldown
+    assert abs(vector[13] - 0.4) < 1e-6  # level 4 / 10
+    assert vector[14] == np.float32(0.5)  # xp fraction
+    assert vector[15] == 1.0  # upgrade pending
+    assert abs(vector[16] - 3.0 / 6.0) < 1e-6  # option pool index 2
+    assert abs(vector[17] - 1.0 / 6.0) < 1e-6  # option pool index 0
+    assert abs(vector[18] - 1.0) < 1e-6  # option pool index 5
     assert vector[ENEMY_SLOTS_OFFSET] == 1.0  # first enemy slot present
     assert vector[ENEMY_SLOTS_OFFSET + ENEMY_FEATURES] == 1.0  # second slot present
     assert vector[ENEMY_SLOTS_OFFSET + 2 * ENEMY_FEATURES] == 0.0  # third slot empty

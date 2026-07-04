@@ -51,7 +51,9 @@ func _build_quads() -> void:
 	_fill_material = _make_material(Color.GREEN)
 	fill_mesh.material = _fill_material
 	_fill.mesh = fill_mesh
-	_fill.position.z = 0.02
+	# look_at() aims local -Z at the camera, so the camera-facing side is -Z.
+	# The fill must sit in front of the background, i.e. slightly toward -Z.
+	_fill.position.z = -0.02
 	_fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_fill)
 

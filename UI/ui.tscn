@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/stats_panel.gd" id="2_stats"]
+[ext_resource type="Script" path="res://scripts/ui/upgrade_panel.gd" id="3_upgr"]
+
+[node name="UI" type="CanvasLayer"]
+process_mode = 3
+
+[node name="HUD" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="LevelLabel" type="Label" parent="HUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -92.0
+offset_right = 316.0
+offset_bottom = -66.0
+text = "Lv 1"
+
+[node name="HealthBar" type="ProgressBar" parent="HUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -60.0
+offset_right = 316.0
+offset_bottom = -38.0
+show_percentage = false
+
+[node name="XPBar" type="ProgressBar" parent="HUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -32.0
+offset_right = 316.0
+offset_bottom = -20.0
+max_value = 1.0
+show_percentage = false
+
+[node name="StatsPanel" type="PanelContainer" parent="."]
+offset_left = 16.0
+offset_top = 16.0
+script = ExtResource("2_stats")
+
+[node name="VBox" type="VBoxContainer" parent="StatsPanel"]
+
+[node name="Header" type="Label" parent="StatsPanel/VBox"]
+text = "Stats ▾"
+
+[node name="Body" type="Label" parent="StatsPanel/VBox"]
+visible = false
+
+[node name="UpgradePanel" type="CenterContainer" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("3_upgr")
+
+[node name="Panel" type="PanelContainer" parent="UpgradePanel"]
+
+[node name="VBox" type="VBoxContainer" parent="UpgradePanel/Panel"]
+
+[node name="Title" type="Label" parent="UpgradePanel/Panel/VBox"]
+text = "LEVEL UP — choose an upgrade"
+horizontal_alignment = 1
+
+[node name="Options" type="VBoxContainer" parent="UpgradePanel/Panel/VBox"]

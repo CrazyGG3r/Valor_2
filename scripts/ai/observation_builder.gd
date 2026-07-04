@@ -45,9 +45,15 @@ static func build(game: GameManager) -> Dictionary:
 			"health": player.health.health,
 			"max_health": player.health.max_health,
 			"cooldowns": player.get_cooldowns(),
+			"level": player.level_system.level,
+			"xp_fraction": player.level_system.xp_fraction(),
 		},
 		"enemies": enemies,
 		"enemy_count": candidates.size(),
 		"wave": game.get_wave(),
 		"time": game.run_time,
+		"upgrade": {
+			"pending": game.has_pending_upgrade(),
+			"options": game.get_upgrade_option_indices(),
+		},
 	}

@@ -5,6 +5,8 @@ extends Node3D
 
 @export var projectile_scene: PackedScene
 @export var cooldown := 0.35
+## Overrides the projectile scene's damage so upgrades can buff it.
+@export var damage := 10.0
 ## Local-space spawn offset (-Z is forward).
 @export var muzzle_offset := Vector3(0.0, 0.2, -0.8)
 @export var faction := &"neutral"
@@ -23,6 +25,7 @@ func try_fire(direction: Vector3) -> bool:
 	var projectile := projectile_scene.instantiate() as Projectile
 	get_tree().current_scene.add_child(projectile)
 	projectile.global_position = global_transform * muzzle_offset
+	projectile.damage = damage
 	projectile.launch(direction.normalized(), faction)
 	return true
 

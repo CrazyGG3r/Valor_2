@@ -21,8 +21,11 @@ const DEFAULT_PORT := 11008
 const FRAMES_PER_STEP := 4
 ## Radians of yaw applied per step at look_x = +/-1.
 const MAX_LOOK_PER_STEP := 0.15
-const PROTOCOL_VERSION := 2
+const PROTOCOL_VERSION := 3
 const REWARD_CONFIG_PATH := "res://configs/reward_config.tres"
+
+## Shown in the stats UI while a client drives the player.
+var agent_name := ""
 
 var _server := TCPServer.new()
 var _client: StreamPeerTCP
@@ -118,12 +121,19 @@ func _accept_client() -> void:
 	print("AIBridge: client connected, simulation under AI control.")
 
 
+func is_ai_active() -> bool:
+	return _client != null
+
+
 func _attach_ai_control() -> void:
 	_game.auto_restart = false
+	_game.ai_controlled = true
 	_game.player_damaged.connect(_on_player_damaged)
 	_game.player_damage_dealt.connect(_on_damage_dealt)
 	_game.enemy_killed.connect(_on_enemy_killed)
 	_game.run_ended.connect(_on_run_ended)
+	_game.xp_collected.connect(_on_xp_collected)
+	_game.leveled_up.connect(_on_leveled_up)
 	_game.spawner.wave_spawned.connect(_on_wave_spawned)
 
 	var player := _game.player
@@ -139,12 +149,16 @@ func _drop_client() -> void:
 	_buffer = ""
 	_step_in_flight = false
 	_done = false
+	agent_name = ""
 	if _game != null and is_instance_valid(_game):
 		_game.auto_restart = true
+		_game.ai_controlled = false
 		_disconnect_signal(_game.player_damaged, _on_player_damaged)
 		_disconnect_signal(_game.player_damage_dealt, _on_damage_dealt)
 		_disconnect_signal(_game.enemy_killed, _on_enemy_killed)
 		_disconnect_signal(_game.run_ended, _on_run_ended)
+		_disconnect_signal(_game.xp_collected, _on_xp_collected)
+		_disconnect_signal(_game.leveled_up, _on_leveled_up)
 		_disconnect_signal(_game.spawner.wave_spawned, _on_wave_spawned)
 		if _human_provider != null and is_instance_valid(_human_provider):
 			_game.player.input_provider = _human_provider
@@ -187,6 +201,14 @@ func _on_wave_spawned(wave_index: int) -> void:
 		_reward += _reward_config.wave_survived
 
 
+func _on_xp_collected(amount: float) -> void:
+	_reward += _reward_config.xp_collected * amount
+
+
+func _on_leveled_up(_level: int) -> void:
+	_reward += _reward_config.level_up
+
+
 # --- protocol ---------------------------------------------------------------
 
 
@@ -219,6 +241,7 @@ func _handle_message(line: String) -> void:
 
 
 func _handle_reset(msg: Dictionary) -> void:
+	agent_name = String(msg.get("agent", "AI"))
 	_game.start_run(int(msg.get("seed", 0)))
 	_ai_provider.reset()
 	_reward = 0.0
@@ -233,7 +256,15 @@ func _handle_step(msg: Dictionary) -> void:
 	if _step_in_flight:
 		_send({"type": "error", "message": "step already in flight"})
 		return
-	_apply_action(msg.get("action", {}))
+	var action: Dictionary = msg.get("action", {})
+	if _game.has_pending_upgrade():
+		# Decision step: consumes the upgrade choice, no sim time passes.
+		# Mirrors the pause a human player gets on the upgrade screen.
+		_reward = 0.0
+		_game.choose_upgrade(int(action.get("upgrade", 0)))
+		_send_state(_reward, _done)
+		return
+	_apply_action(action)
 	_reward = 0.0
 	_frames_left = FRAMES_PER_STEP
 	_step_in_flight = true

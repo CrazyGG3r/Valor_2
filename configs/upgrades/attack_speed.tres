@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Upgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade.gd" id="1_upg"]
+
+[resource]
+script = ExtResource("1_upg")
+id = &"attack_speed"
+display_name = "Frenzy"
+description = "Melee and shoot cooldowns -15%"
+stat = &"attack_speed"
+operation = 1
+value = 0.85
+max_stacks = 5

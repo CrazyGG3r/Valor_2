@@ -9,6 +9,8 @@
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="7_hitbx"]
 [ext_resource type="Script" path="res://scripts/components/projectile_launcher.gd" id="8_lnchr"]
 [ext_resource type="PackedScene" path="res://Entities/projectile.tscn" id="9_proj"]
+[ext_resource type="Script" path="res://scripts/components/level_system.gd" id="10_lvl"]
+[ext_resource type="Script" path="res://scripts/components/hit_flash.gd" id="11_flsh"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_xb0p8"]
 
@@ -64,3 +66,9 @@ shape = SubResource("BoxShape3D_melee")
 script = ExtResource("8_lnchr")
 projectile_scene = ExtResource("9_proj")
 faction = &"player"
+
+[node name="LevelSystem" type="Node" parent="."]
+script = ExtResource("10_lvl")
+
+[node name="HitFlash" type="Node" parent="."]
+script = ExtResource("11_flsh")

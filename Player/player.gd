@@ -22,10 +22,12 @@ extends CharacterBody3D
 @onready var hurtbox: Hurtbox = $Hurtbox
 @onready var melee_weapon: MeleeWeapon = $MeleeWeapon
 @onready var projectile_launcher: ProjectileLauncher = $ProjectileLauncher
+@onready var level_system: LevelSystem = $LevelSystem
 
 var _dash_time_left := 0.0
 var _dash_cooldown_left := 0.0
 var _dash_direction := Vector3.ZERO
+var _base_stats: Dictionary
 
 
 func _ready() -> void:
@@ -36,6 +38,55 @@ func _ready() -> void:
 				break
 	if input_provider == null:
 		push_error("Player has no InputProvider; it cannot be controlled.")
+	_base_stats = {
+		"speed": speed,
+		"dash_cooldown": dash_cooldown,
+		"melee_cooldown": melee_weapon.cooldown,
+		"melee_damage": melee_weapon.hitbox.damage,
+		"shoot_cooldown": projectile_launcher.cooldown,
+		"projectile_damage": projectile_launcher.damage,
+		"max_health": health.max_health,
+	}
+
+
+## Restores scene-authored stats. Called at run start so upgrades from the
+## previous run don't leak into the next one.
+func reset_stats() -> void:
+	speed = _base_stats["speed"]
+	dash_cooldown = _base_stats["dash_cooldown"]
+	melee_weapon.cooldown = _base_stats["melee_cooldown"]
+	melee_weapon.hitbox.damage = _base_stats["melee_damage"]
+	projectile_launcher.cooldown = _base_stats["shoot_cooldown"]
+	projectile_launcher.damage = _base_stats["projectile_damage"]
+	health.max_health = _base_stats["max_health"]
+
+
+## Applies a data-driven upgrade to this body's stats.
+func apply_upgrade(upgrade: Upgrade) -> void:
+	match upgrade.stat:
+		&"move_speed":
+			speed = _apply_operation(speed, upgrade)
+		&"melee_damage":
+			melee_weapon.hitbox.damage = _apply_operation(melee_weapon.hitbox.damage, upgrade)
+		&"projectile_damage":
+			projectile_launcher.damage = _apply_operation(projectile_launcher.damage, upgrade)
+		&"attack_speed":
+			melee_weapon.cooldown = _apply_operation(melee_weapon.cooldown, upgrade)
+			projectile_launcher.cooldown = _apply_operation(projectile_launcher.cooldown, upgrade)
+		&"dash_cooldown":
+			dash_cooldown = _apply_operation(dash_cooldown, upgrade)
+		&"max_health":
+			var previous := health.max_health
+			health.max_health = _apply_operation(previous, upgrade)
+			health.heal(health.max_health - previous)
+		_:
+			push_warning("Unknown upgrade stat: %s" % upgrade.stat)
+
+
+func _apply_operation(current: float, upgrade: Upgrade) -> float:
+	if upgrade.operation == Upgrade.Operation.ADD:
+		return current + upgrade.value
+	return current * upgrade.value
 
 
 func _physics_process(delta: float) -> void:

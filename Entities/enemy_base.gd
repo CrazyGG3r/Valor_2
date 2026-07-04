@@ -8,13 +8,26 @@ extends CharacterBody3D
 @export var speed := 3.0
 @export var gravity := 9.8
 
+@export_group("Rewards")
+@export var xp_value := 5.0
+@export var xp_orb_scene: PackedScene
+
 @onready var health: HealthComponent = $HealthComponent
 
 var _target: Node3D
 
 
 func _ready() -> void:
-	health.died.connect(queue_free)
+	health.died.connect(_on_died)
+
+
+func _on_died() -> void:
+	if xp_orb_scene != null:
+		var orb := xp_orb_scene.instantiate() as XPOrb
+		orb.xp_value = xp_value
+		get_parent().add_child(orb)
+		orb.global_position = global_position
+	queue_free()
 
 
 func _physics_process(delta: float) -> void:

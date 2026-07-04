@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Upgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade.gd" id="1_upg"]
+
+[resource]
+script = ExtResource("1_upg")
+id = &"melee_damage"
+display_name = "Sharper Blade"
+description = "+5 melee damage"
+stat = &"melee_damage"
+operation = 0
+value = 5.0
+max_stacks = 0

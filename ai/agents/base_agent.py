@@ -12,6 +12,10 @@ import numpy as np
 
 class Agent(ABC):
     name: str = "agent"
+    ## Recurrent agents (e.g. Dreamer) carry hidden state across a run and
+    ## must reset it via on_episode_start(). The trainer honors this flag only
+    ## for documentation; it always calls on_episode_start regardless.
+    is_recurrent: bool = False
 
     def __init__(self, obs_size: int, config: dict[str, Any] | None = None) -> None:
         self.obs_size = obs_size
@@ -20,6 +24,10 @@ class Agent(ABC):
     @abstractmethod
     def select_action(self, observation: np.ndarray, explore: bool = True) -> dict:
         """Return a wire action dict (see environments.action_space)."""
+
+    def on_episode_start(self) -> None:
+        """Called by the trainer right after env.reset(), before the first
+        action. Recurrent agents reset their hidden state here."""
 
     def observe(
         self,

@@ -1,0 +1,31 @@
+{
+  "env": {
+    "port": 11008,
+    "max_episode_steps": 2000
+  },
+  "agent": {
+    "deter": 200,
+    "stoch": 32,
+    "hidden": 200,
+    "embed": 200,
+    "seq_len": 50,
+    "batch_size": 16,
+    "horizon": 15,
+    "gamma": 0.99,
+    "lam": 0.95,
+    "kl_scale": 1.0,
+    "kl_balance": 0.8,
+    "free_nats": 1.0,
+    "model_lr": 3e-04,
+    "actor_lr": 8e-05,
+    "critic_lr": 8e-05,
+    "entropy_scale": 1e-03,
+    "train_every": 16,
+    "warmup_episodes": 5,
+    "capacity": 100000,
+    "device": "cpu"
+  },
+  "training": {
+    "checkpoint_every": 25
+  }
+}

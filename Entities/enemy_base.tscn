@@ -5,6 +5,8 @@
 [ext_resource type="Script" path="res://scripts/components/health_component.gd" id="3_hlth"]
 [ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="4_hurtb"]
 [ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="5_hitbx"]
+[ext_resource type="Script" path="res://scripts/ui/enemy_health_bar.gd" id="6_hpbar"]
+[ext_resource type="PackedScene" path="res://Entities/xp_orb.tscn" id="7_orb"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_avcr5"]
 albedo_texture = ExtResource("1_gjkq0")
@@ -25,6 +27,7 @@ radius = 1.3
 collision_layer = 4
 collision_mask = 7
 script = ExtResource("2_enemy")
+xp_orb_scene = ExtResource("7_orb")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1886087656]
 mesh = SubResource("TorusMesh_y4jlb")
@@ -53,3 +56,7 @@ retrigger_interval = 1.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ContactHitbox"]
 shape = SubResource("SphereShape3D_hit")
+
+[node name="HealthBar" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+script = ExtResource("6_hpbar")

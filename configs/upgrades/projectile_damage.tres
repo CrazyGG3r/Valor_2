@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Upgrade" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade.gd" id="1_upg"]
+
+[resource]
+script = ExtResource("1_upg")
+id = &"projectile_damage"
+display_name = "Heavy Rounds"
+description = "+4 projectile damage"
+stat = &"projectile_damage"
+operation = 0
+value = 4.0
+max_stacks = 0

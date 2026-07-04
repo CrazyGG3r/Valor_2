@@ -21,8 +21,9 @@ from environments.action_space import (
 def test_discrete_table() -> None:
     assert DISCRETE_ACTION_COUNT == 27  # 9 move options x 3 turns
     for action in DISCRETE_ACTIONS:
-        assert set(action) == {"move", "look", "jump", "attack", "shoot", "dash"}
+        assert set(action) == {"move", "look", "jump", "attack", "shoot", "dash", "upgrade"}
         assert all(-1.0 <= value <= 1.0 for value in action["move"] + action["look"])
+        assert action["upgrade"] == 0
     assert discrete_to_action(0) is DISCRETE_ACTIONS[0]
 
 

@@ -6,6 +6,8 @@
 [ext_resource type="Script" uid="uid://cq8jplnryfvgc" path="res://scripts/spawner.gd" id="4_1bvp3"]
 [ext_resource type="PackedScene" uid="uid://by53cs0pofken" path="res://Entities/enemy_base.tscn" id="5_lquwl"]
 [ext_resource type="Script" uid="uid://br8n2nyluew4q" path="res://scripts/game_manager.gd" id="6_gmngr"]
+[ext_resource type="PackedScene" path="res://UI/ui.tscn" id="7_ui"]
+[ext_resource type="Resource" path="res://configs/upgrades/upgrade_pool.tres" id="8_pool"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0xm2m"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -43,6 +45,7 @@ size = Vector3(0.5, 3, 40.5)
 
 [node name="main" type="Node3D" unique_id=642484482]
 script = ExtResource("6_gmngr")
+upgrade_pool = ExtResource("8_pool")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1201024782]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
@@ -73,40 +76,42 @@ script = ExtResource("3_h2yge")
 script = ExtResource("4_1bvp3")
 enemy_scenes = Array[PackedScene]([ExtResource("5_lquwl")])
 
-[node name="Arena" type="Node3D" parent="."]
+[node name="Arena" type="Node3D" parent="." unique_id=1659790406]
 
-[node name="WallNorth" type="StaticBody3D" parent="Arena"]
+[node name="WallNorth" type="StaticBody3D" parent="Arena" unique_id=272303170]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -20)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallNorth"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallNorth" unique_id=1720606391]
 mesh = SubResource("BoxMesh_wall_x")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallNorth"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallNorth" unique_id=944726378]
 shape = SubResource("BoxShape3D_wall_x")
 
-[node name="WallSouth" type="StaticBody3D" parent="Arena"]
+[node name="WallSouth" type="StaticBody3D" parent="Arena" unique_id=2130319131]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 20)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallSouth"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallSouth" unique_id=2046584394]
 mesh = SubResource("BoxMesh_wall_x")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallSouth"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallSouth" unique_id=1539553590]
 shape = SubResource("BoxShape3D_wall_x")
 
-[node name="WallEast" type="StaticBody3D" parent="Arena"]
+[node name="WallEast" type="StaticBody3D" parent="Arena" unique_id=687644490]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, 0)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallEast"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallEast" unique_id=226572448]
 mesh = SubResource("BoxMesh_wall_z")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallEast"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallEast" unique_id=1870485706]
 shape = SubResource("BoxShape3D_wall_z")
 
-[node name="WallWest" type="StaticBody3D" parent="Arena"]
+[node name="WallWest" type="StaticBody3D" parent="Arena" unique_id=963649986]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.5, 0)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallWest"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallWest" unique_id=194790632]
 mesh = SubResource("BoxMesh_wall_z")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallWest"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallWest" unique_id=157661311]
 shape = SubResource("BoxShape3D_wall_z")
+
+[node name="UI" parent="." unique_id=2124761569 instance=ExtResource("7_ui")]
