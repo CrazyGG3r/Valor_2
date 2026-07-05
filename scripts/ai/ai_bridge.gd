@@ -95,7 +95,10 @@ func _physics_process(delta: float) -> void:
 		# for this frame runs after the decrement; pausing at zero on the
 		# NEXT frame yields exactly FRAMES_PER_STEP simulated frames.
 		_frames_left -= 1
-		_reward += _reward_config.survive_per_second * delta
+		# Divide out Engine.time_scale (--speed) so the survive reward is worth
+		# the same per game-second at any training speed -- otherwise high speeds
+		# inflate it and reward stalling. run_time is normalized the same way.
+		_reward += _reward_config.survive_per_second * (delta / maxf(Engine.time_scale, 0.0001))
 	else:
 		get_tree().paused = true
 		_step_in_flight = false
@@ -351,6 +354,9 @@ func _send_state(reward: float, done: bool) -> void:
 			"dashes": _game.dashes,
 			"melee_swings": _game.melee_swings,
 			"upgrades": _game.acquired_upgrade_summary(),
+			# Full per-episode blob for offline analysis; RunLogger writes it to
+			# episode_stats.jsonl (kept out of the training console).
+			"stats": _game.episode_stats(),
 		},
 	})
 

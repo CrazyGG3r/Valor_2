@@ -24,7 +24,7 @@ anchor_bottom = 1.0
 
 [node name="Menu" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Title" type="Label" parent="Center/Menu"]
@@ -42,33 +42,114 @@ text = "Rise. Fight. Ascend."
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Center/Menu"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 
-[node name="ModeButton" type="Button" parent="Center/Menu"]
+[node name="MainButtons" type="VBoxContainer" parent="Center/Menu"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ModeButton" type="Button" parent="Center/Menu/MainButtons"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "MODE"
 
-[node name="OptionsButton" type="Button" parent="Center/Menu"]
+[node name="LeaderboardButton" type="Button" parent="Center/Menu/MainButtons"]
+custom_minimum_size = Vector2(280, 48)
+layout_mode = 2
+text = "LEADERBOARD"
+
+[node name="OptionsButton" type="Button" parent="Center/Menu/MainButtons"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "OPTIONS"
 
-[node name="SettingsButton" type="Button" parent="Center/Menu"]
+[node name="SettingsButton" type="Button" parent="Center/Menu/MainButtons"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "SETTINGS"
 
-[node name="CreditButton" type="Button" parent="Center/Menu"]
+[node name="CreditButton" type="Button" parent="Center/Menu/MainButtons"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "CREDIT"
 
-[node name="ExitButton" type="Button" parent="Center/Menu"]
+[node name="ExitButton" type="Button" parent="Center/Menu/MainButtons"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 text = "EXIT"
+
+[node name="ModePanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="ModePanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Title" type="Label" parent="ModePanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "SELECT MODE"
+horizontal_alignment = 1
+
+[node name="ModeButtons" type="VBoxContainer" parent="ModePanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BackButton" type="Button" parent="ModePanel/VBox"]
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "BACK"
+
+[node name="LeaderboardPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -220.0
+offset_right = 320.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="LeaderboardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Title" type="Label" parent="LeaderboardPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "LEADERBOARD"
+horizontal_alignment = 1
+
+[node name="ModeTabs" type="TabContainer" parent="LeaderboardPanel/VBox"]
+custom_minimum_size = Vector2(600, 300)
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="LeaderboardPanel/VBox"]
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "BACK"
 
 [node name="Placeholder" type="PanelContainer" parent="."]
 visible = false

@@ -38,6 +38,16 @@ func health_fraction() -> float:
 	return health.health / health.max_health
 
 
+## Multiplies this enemy's max health (and refills) for per-wave scaling. Called
+## by the spawner right after the enemy enters the tree, so it stacks on top of
+## the scene-authored base health.
+func apply_health_scale(multiplier: float) -> void:
+	if health == null or is_equal_approx(multiplier, 1.0):
+		return
+	health.max_health *= multiplier
+	health.health = health.max_health
+
+
 func _on_died() -> void:
 	if xp_orb_scene != null:
 		var orb := xp_orb_scene.instantiate() as XPOrb

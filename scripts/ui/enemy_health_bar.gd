@@ -29,11 +29,19 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	# Face the camera as a whole node (not per-material billboard) so the
-	# fill quad's small z-offset keeps layering correctly.
+	# Hidden at full/zero health -- no need to reorient an invisible bar.
+	if not visible:
+		return
 	var camera := get_viewport().get_camera_3d()
-	if camera != null:
-		look_at(camera.global_position, Vector3.UP)
+	if camera == null:
+		return
+	# Screen-aligned billboard: copy the camera's basis (bar stays parallel to
+	# the view plane and upright on screen), then flip 180 deg about its up so
+	# local -Z faces the camera, keeping the fill quad's -Z offset in front.
+	# Unlike look_at(camera, Vector3.UP), this never hits the colinear warning
+	# when an enemy passes directly under the camera.
+	var cam_basis := camera.global_transform.basis
+	global_transform.basis = cam_basis.rotated(cam_basis.y, PI)
 
 
 func _build_quads() -> void:

@@ -21,6 +21,17 @@ signal wave_spawned(wave_index: int)
 ## Waves a newly unlocked type takes to reach its full weight.
 @export var weight_ramp_waves := 3
 
+@export_group("Difficulty")
+enum HealthCurve { EXPONENTIAL, LOGARITHMIC, LINEAR }
+## Shape of the enemy max-health ramp across waves. EXPONENTIAL compounds (keeps
+## pace with the player's upgrade snowball); LOGARITHMIC ramps hard early then
+## flattens; LINEAR is a flat per-tier increase.
+@export var health_curve := HealthCurve.EXPONENTIAL
+## Health is re-scaled once per this many waves (a difficulty "tier").
+@export var health_scale_interval := 3
+## Growth strength per tier. e.g. EXPONENTIAL 0.12 => x1.12 health each tier.
+@export var health_scale_rate := 0.12
+
 @export_group("Placement")
 @export var spawn_radius := 16.0
 @export var spawn_height := 1.0
@@ -100,7 +111,25 @@ func _spawn_one() -> void:
 	var enemy := (entry["scene"] as PackedScene).instantiate() as Node3D
 	add_child(enemy)  # must enter the tree BEFORE global_position is valid
 	enemy.global_position = _random_position(float(entry["min_distance"]))
+	if enemy is Enemy:
+		(enemy as Enemy).apply_health_scale(health_scale_multiplier(wave_index))
 	enemy_spawned.emit(enemy)
+
+
+## Deterministic max-health multiplier for enemies spawned on the given wave.
+## Purely a function of the wave index (no RNG), so seeded runs stay
+## reproducible. Tier = how many full intervals of waves have elapsed.
+func health_scale_multiplier(wave: int) -> float:
+	var tier := float(maxi(wave - 1, 0) / maxi(health_scale_interval, 1))
+	if tier <= 0.0:
+		return 1.0
+	match health_curve:
+		HealthCurve.LOGARITHMIC:
+			return 1.0 + health_scale_rate * log(1.0 + tier)
+		HealthCurve.LINEAR:
+			return 1.0 + health_scale_rate * tier
+		_:  # EXPONENTIAL
+			return pow(1.0 + health_scale_rate, tier)
 
 
 ## Weighted pick over the types unlocked at the current wave. New types fade

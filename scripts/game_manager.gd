@@ -33,6 +33,13 @@ var kills := 0
 var shots_fired := 0
 var dashes := 0
 var melee_swings := 0
+## Running totals for research-grade episode stats (see episode_stats()).
+var damage_dealt_total := 0.0
+var damage_taken_total := 0.0
+var peak_speed := 0.0
+## Per enemy-type breakdowns: {"melee"/"tank"/"ranged"/"unknown": count/amount}.
+var kills_by_type: Dictionary = {}
+var damage_taken_by_type: Dictionary = {}
 var run_active := false
 ## Set by the AI bridge; suppresses the pause-driven human upgrade flow.
 var ai_controlled := false
@@ -41,6 +48,8 @@ var pending_upgrade_options: Array[Upgrade] = []
 var _initial_player_transform: Transform3D
 var _pending_level_ups := 0
 var _upgrade_stacks: Dictionary = {}
+## Upgrades in the order they were chosen this run (display names).
+var _upgrade_history: Array[String] = []
 var _upgrade_rng := RandomNumberGenerator.new()
 
 
@@ -69,7 +78,12 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if run_active:
-		run_time += delta
+		# Divide out --speed (Engine.time_scale scales delta) so run_time is in
+		# real game-seconds regardless of training speed. See survive reward in
+		# ai_bridge.gd, kept normalized the same way.
+		run_time += delta / maxf(Engine.time_scale, 0.0001)
+		var horizontal_speed := Vector2(player.velocity.x, player.velocity.z).length()
+		peak_speed = maxf(peak_speed, horizontal_speed)
 
 
 func start_run(seed_value: int = 0) -> void:
@@ -78,9 +92,16 @@ func start_run(seed_value: int = 0) -> void:
 	shots_fired = 0
 	dashes = 0
 	melee_swings = 0
+	damage_dealt_total = 0.0
+	damage_taken_total = 0.0
+	peak_speed = 0.0
+	# Seeded with every type so the JSONL schema is stable even at zero.
+	kills_by_type = {"melee": 0, "tank": 0, "ranged": 0, "unknown": 0}
+	damage_taken_by_type = {"melee": 0.0, "tank": 0.0, "ranged": 0.0, "unknown": 0.0}
 	pending_upgrade_options = []
 	_pending_level_ups = 0
 	_upgrade_stacks.clear()
+	_upgrade_history.clear()
 	if seed_value == 0:
 		_upgrade_rng.randomize()
 	else:
@@ -123,6 +144,37 @@ func get_upgrade_option_indices() -> Array[int]:
 	return indices
 
 
+## Upgrades in the exact order the player/agent chose them this run, e.g.
+## ["Sharp Blade", "Swift Boots", "Sharp Blade"]. Useful for studying the AI's
+## skill-selection strategy over a run.
+func acquired_upgrade_order() -> Array[String]:
+	return _upgrade_history.duplicate()
+
+
+## Full per-episode stat blob for offline analysis (ai_progress_viz). Kept out
+## of the training console on purpose -- this is written to disk per episode.
+func episode_stats() -> Dictionary:
+	return {
+		"wave": get_wave(),
+		"time": run_time,
+		"kills": kills,
+		"shots_fired": shots_fired,
+		"dashes": dashes,
+		"melee_swings": melee_swings,
+		"damage_dealt": damage_dealt_total,
+		"damage_taken": damage_taken_total,
+		"kills_by_type": kills_by_type.duplicate(),
+		"damage_taken_by_type": damage_taken_by_type.duplicate(),
+		"final_health": player.health.health,
+		"max_health": player.health.max_health,
+		"move_speed": player.speed,
+		"peak_speed": peak_speed,
+		"level": player.level_system.level,
+		"upgrade_order": acquired_upgrade_order(),
+		"upgrade_counts": _upgrade_stacks.duplicate(),
+	}
+
+
 ## Lines like "Swift Boots x2" for the stats panel.
 func acquired_upgrade_summary() -> Array[String]:
 	var lines: Array[String] = []
@@ -140,6 +192,7 @@ func choose_upgrade(index: int) -> void:
 		return
 	var choice := pending_upgrade_options[clampi(index, 0, pending_upgrade_options.size() - 1)]
 	_upgrade_stacks[choice.id] = int(_upgrade_stacks.get(choice.id, 0)) + 1
+	_upgrade_history.append(choice.display_name)
 	player.apply_upgrade(choice)
 	pending_upgrade_options = []
 	_pending_level_ups = maxi(_pending_level_ups - 1, 0)
@@ -186,18 +239,49 @@ func _roll_options() -> Array[Upgrade]:
 # --- combat events ----------------------------------------------------------
 
 
-func _on_player_damaged(amount: float, _source: Node) -> void:
+func _on_player_damaged(amount: float, source: Node) -> void:
+	damage_taken_total += amount
+	var key := _damage_source_type_key(source)
+	damage_taken_by_type[key] = float(damage_taken_by_type.get(key, 0.0)) + amount
 	player_damaged.emit(amount)
 	DamageNumber.spawn(self, player.global_position + Vector3.UP * 1.6, amount, Color.RED)
+
+
+## "melee"/"tank"/"ranged"/"unknown" for an enemy node.
+func _enemy_type_key(node: Node) -> String:
+	if not (node is Enemy):
+		return "unknown"
+	match (node as Enemy).type_id:
+		Enemy.TYPE_TANK: return "tank"
+		Enemy.TYPE_RANGED: return "ranged"
+		Enemy.TYPE_MELEE: return "melee"
+		_: return "unknown"
+
+
+## Resolves a damage source to an enemy type. Contact hits come from an enemy's
+## Hitbox (walk up to the Enemy); projectiles are only fired at the player by
+## ranged enemies.
+func _damage_source_type_key(source: Node) -> String:
+	var node := source
+	while node != null:
+		if node is Enemy:
+			return _enemy_type_key(node)
+		node = node.get_parent()
+	if source is Projectile:
+		return "ranged"
+	return "unknown"
 
 
 func _on_enemy_spawned(enemy: Node3D) -> void:
 	var health: HealthComponent = enemy.get_node_or_null(^"HealthComponent")
 	if health == null:
 		return
+	# Captured now so the tally survives the node being freed on death.
+	var type_key := _enemy_type_key(enemy)
 	# All damage to enemies counts as player-dealt until enemy friendly fire exists.
 	health.damaged.connect(
 		func(amount: float, _source: Node) -> void:
+			damage_dealt_total += amount
 			player_damage_dealt.emit(amount)
 			if is_instance_valid(enemy):
 				DamageNumber.spawn(
@@ -206,6 +290,7 @@ func _on_enemy_spawned(enemy: Node3D) -> void:
 	health.died.connect(
 		func() -> void:
 			kills += 1
+			kills_by_type[type_key] = int(kills_by_type.get(type_key, 0)) + 1
 			enemy_killed.emit(enemy))
 
 
