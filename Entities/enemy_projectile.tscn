@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/projectile.gd" id="1_proj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eproj"]
+emission_enabled = true
+emission = Color(1, 0.25, 0.2, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_eproj"]
+material = SubResource("StandardMaterial3D_eproj")
+radius = 0.16
+height = 0.32
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_eproj"]
+radius = 0.22
+
+[node name="EnemyProjectile" type="Area3D"]
+script = ExtResource("1_proj")
+speed = 10.0
+damage = 8.0
+lifetime = 4.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_eproj")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_eproj")

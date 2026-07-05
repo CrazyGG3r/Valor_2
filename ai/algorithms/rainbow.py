@@ -29,6 +29,7 @@ except ImportError as error:  # pragma: no cover
 from agents.base_agent import Agent
 from environments.action_space import DISCRETE_ACTION_COUNT, discrete_to_action
 from utils.segment_tree import MinSegmentTree, SumSegmentTree
+from utils.torch_device import resolve_device
 
 DEFAULTS: dict[str, Any] = {
     "hidden_size": 128,
@@ -47,7 +48,7 @@ DEFAULTS: dict[str, Any] = {
     "priority_beta_start": 0.4,
     "priority_beta_steps": 100_000,
     "max_grad_norm": 10.0,
-    "device": "cpu",
+    "device": "auto",  # GPU when available; override with "cpu"/"cuda:N"
     "seed": 0,
 }
 
@@ -206,7 +207,7 @@ class RainbowAgent(Agent):
         super().__init__(obs_size, {**DEFAULTS, **(config or {})})
         cfg = self.config
         torch.manual_seed(cfg["seed"])
-        self.device = torch.device(cfg["device"])
+        self.device = resolve_device(cfg["device"])
         self.atoms = cfg["atoms"]
         self.n_step = cfg["n_step"]
         self.gamma = cfg["gamma"]

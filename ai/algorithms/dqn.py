@@ -1,7 +1,8 @@
 """Deep Q-Network over the discretized action set (environments.action_space).
 
 Value-based methods need discrete actions, so the continuous move/look space
-is quantized into DISCRETE_ACTION_COUNT combinations of direction and turn.
+is quantized into DISCRETE_ACTION_COUNT combinations of direction, turn, and
+combat button (attack/shoot/dash), plus dedicated upgrade-choice actions.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ except ImportError as error:  # pragma: no cover
 from agents.base_agent import Agent
 from environments.action_space import DISCRETE_ACTION_COUNT, discrete_to_action
 from utils.replay_buffer import ReplayBuffer
+from utils.torch_device import resolve_device
 
 DEFAULTS: dict[str, Any] = {
     "hidden_sizes": [128, 128],
@@ -32,7 +34,7 @@ DEFAULTS: dict[str, Any] = {
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
     "epsilon_decay_steps": 50_000,
-    "device": "cpu",
+    "device": "auto",  # GPU when available; override with "cpu"/"cuda:N"
     "seed": 0,
 }
 
@@ -54,7 +56,7 @@ class DQNAgent(Agent):
         super().__init__(obs_size, {**DEFAULTS, **(config or {})})
         cfg = self.config
         torch.manual_seed(cfg["seed"])
-        self.device = torch.device(cfg["device"])
+        self.device = resolve_device(cfg["device"])
         self.online = _mlp(obs_size, cfg["hidden_sizes"], DISCRETE_ACTION_COUNT).to(self.device)
         self.target = copy.deepcopy(self.online).eval()
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=cfg["lr"])

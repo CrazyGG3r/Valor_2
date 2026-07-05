@@ -21,6 +21,7 @@ except ImportError as error:  # pragma: no cover
 
 from agents.base_agent import Agent
 from environments.action_space import CONTINUOUS_ACTION_SIZE, continuous_to_action
+from utils.torch_device import resolve_device
 
 DEFAULTS: dict[str, Any] = {
     "hidden_sizes": [128, 128],
@@ -34,7 +35,7 @@ DEFAULTS: dict[str, Any] = {
     "entropy_coef": 0.01,
     "value_coef": 0.5,
     "max_grad_norm": 0.5,
-    "device": "cpu",
+    "device": "auto",  # GPU when available; override with "cpu"/"cuda:N"
     "seed": 0,
 }
 
@@ -70,7 +71,7 @@ class PPOAgent(Agent):
         super().__init__(obs_size, {**DEFAULTS, **(config or {})})
         cfg = self.config
         torch.manual_seed(cfg["seed"])
-        self.device = torch.device(cfg["device"])
+        self.device = resolve_device(cfg["device"])
         self.net = ActorCritic(obs_size, CONTINUOUS_ACTION_SIZE, cfg["hidden_sizes"]).to(self.device)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=cfg["lr"])
         self._clear_rollout()

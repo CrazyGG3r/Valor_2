@@ -28,7 +28,7 @@ ai/
 | name | family | notes |
 |---|---|---|
 | `random` | baseline | no learning; runs without PyTorch |
-| `dqn` | value, discrete | vanilla Deep Q-Network over the 27-action set |
+| `dqn` | value, discrete | vanilla Deep Q-Network over the 111-action set |
 | `rainbow` | value, discrete | dueling + double + C51 + NoisyNet + PER + n-step |
 | `ppo` | policy, continuous | clipped PPO with GAE |
 | `dreamer` | model-based | compact DreamerV3-style world model + imagination A-C |
@@ -81,7 +81,7 @@ i.e. one agent action every 4 ticks at 60 Hz physics).
 
 | Direction | Message |
 |---|---|
-| ← on connect | `{"type": "hello", "version": 3, "frames_per_step": 4, ...}` |
+| ← on connect | `{"type": "hello", "version": 4, "frames_per_step": 4, ...}` |
 | → | `{"type": "reset", "seed": 123, "agent": "dqn"}` |
 | → | `{"type": "step", "action": {"move": [x, y], "look": [x, y], "jump": false, "attack": false, "shoot": false, "dash": false, "upgrade": 0}}` |
 | ← reply to both | `{"type": "obs", "observation": {...}, "reward": 0.0, "done": false, "info": {"kills": 0, "time": 1.2, "wave": 1}}` |
@@ -90,9 +90,11 @@ i.e. one agent action every 4 ticks at 60 Hz physics).
 **Decision steps:** when the observation reports a pending upgrade choice
 (`observation.upgrade.pending`), the next `step` consumes only the
 `"upgrade"` field (option index 0-2) and advances zero physics frames --
-the exact analog of the pause a human gets on the level-up screen. All
-current agents send `upgrade: 0` (first option); learning to choose is a
-future improvement.
+the exact analog of the pause a human gets on the level-up screen. Agents
+choose the option through their action space: continuous agents map their
+7th channel onto option 0/1/2, discrete agents have three dedicated
+upgrade-choice actions at the end of the table
+(`environments.action_space.UPGRADE_ACTION_OFFSET`).
 
 Action conventions: `move` x = strafe (+right), y = forward/back (+back);
 `look` x = yaw rate; everything in [-1, 1]. `attack` (melee swing), `shoot`

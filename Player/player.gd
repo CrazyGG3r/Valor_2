@@ -15,6 +15,8 @@ extends CharacterBody3D
 @export var dash_duration := 0.2
 @export var dash_cooldown := 1.2
 
+signal dashed
+
 ## Falls back to the first InputProvider child if left unassigned.
 @export var input_provider: InputProvider
 
@@ -158,6 +160,7 @@ func _try_dash(move_direction: Vector3) -> void:
 	_dash_time_left = dash_duration
 	_dash_cooldown_left = dash_cooldown
 	hurtbox.set_invulnerable(dash_duration + 0.05)
+	dashed.emit()
 
 
 func _process_dead(delta: float) -> void:

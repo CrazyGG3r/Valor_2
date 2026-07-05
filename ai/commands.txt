@@ -1,0 +1,1 @@
+"G:\Program filess\Godot\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64.exe" --path "F:\Godot\valor-2" --headless -- --ai-port=11008 --speed=8

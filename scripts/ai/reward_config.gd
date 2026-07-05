@@ -16,3 +16,15 @@ extends Resource
 @export var level_up := 5.0
 ## Per point of damage dealt.
 @export var damage_dealt := 0.02
+
+@export_group("Action shaping")
+## Per melee swing. Set negative to tax mindless spam so the agent only swings
+## when it actually connects -- the main lever against berserk melee.
+@export var melee_swing := 0.0
+## Per shot fired. Usually leave at 0: paying per shot just teaches the agent to
+## spam bullets the same way it spams melee. Nudge slightly positive only to
+## bootstrap early exploration, then return to 0.
+@export var shot_fired := 0.0
+## Per dash. A small positive value bootstraps dodging (which otherwise earns no
+## reward and is never explored). Drop back toward 0 once dashing appears.
+@export var dash_used := 0.0

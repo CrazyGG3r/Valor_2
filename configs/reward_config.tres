@@ -12,3 +12,6 @@ wave_survived = 2.0
 xp_collected = 0.5
 level_up = 5.0
 damage_dealt = 0.02
+melee_swing = -0.02
+shot_fired = 0.0
+dash_used = 0.05

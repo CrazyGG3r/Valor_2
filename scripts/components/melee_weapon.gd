@@ -4,6 +4,8 @@ extends Node3D
 ## on the Hitbox and its collision shape in the scene; this node owns only
 ## the timing.
 
+signal attacked
+
 @export var cooldown := 0.6
 @export var swing_duration := 0.2
 
@@ -21,6 +23,7 @@ func try_attack() -> bool:
 		return false
 	_cooldown_left = cooldown
 	hitbox.activate(swing_duration)
+	attacked.emit()
 	return true
 
 

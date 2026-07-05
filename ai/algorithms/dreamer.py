@@ -29,6 +29,7 @@ except ImportError as error:  # pragma: no cover
 
 from agents.base_agent import Agent
 from environments.action_space import CONTINUOUS_ACTION_SIZE, continuous_to_action
+from utils.torch_device import resolve_device
 
 DEFAULTS: dict[str, Any] = {
     "deter": 200,
@@ -51,7 +52,7 @@ DEFAULTS: dict[str, Any] = {
     "train_every": 16,
     "warmup_episodes": 5,
     "capacity": 100_000,
-    "device": "cpu",
+    "device": "auto",  # GPU when available; override with "cpu"/"cuda:N"
     "seed": 0,
 }
 
@@ -183,7 +184,7 @@ class DreamerAgent(Agent):
         super().__init__(obs_size, {**DEFAULTS, **(config or {})})
         cfg = self.config
         torch.manual_seed(cfg["seed"])
-        self.device = torch.device(cfg["device"])
+        self.device = resolve_device(cfg["device"])
         self.action_size = CONTINUOUS_ACTION_SIZE
         self.model = WorldModel(obs_size, self.action_size, cfg).to(self.device)
         feature_size = cfg["deter"] + cfg["stoch"]

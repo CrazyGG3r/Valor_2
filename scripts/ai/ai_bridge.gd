@@ -21,8 +21,11 @@ const DEFAULT_PORT := 11008
 const FRAMES_PER_STEP := 4
 ## Radians of yaw applied per step at look_x = +/-1.
 const MAX_LOOK_PER_STEP := 0.15
-const PROTOCOL_VERSION := 3
+const PROTOCOL_VERSION := 4
 const REWARD_CONFIG_PATH := "res://configs/reward_config.tres"
+## Arena scene loaded on demand when a client connects to a non-game scene
+## (e.g. the main menu), so training never depends on the boot scene.
+const GAME_SCENE_PATH := "res://main.tscn"
 
 ## Shown in the stats UI while a client drives the player.
 var agent_name := ""
@@ -38,6 +41,8 @@ var _frames_left := 0
 var _step_in_flight := false
 var _reward := 0.0
 var _done := false
+## True while the arena scene is loading before AI control can be attached.
+var _pending_attach := false
 
 
 func _ready() -> void:
@@ -74,6 +79,11 @@ func _process(_delta: float) -> void:
 	var available := _client.get_available_bytes()
 	if available > 0:
 		_buffer += _client.get_utf8_string(available)
+	if _pending_attach:
+		# Keep buffering messages, but hold off processing them until the arena
+		# scene has finished loading and AI control is attached.
+		_try_complete_attach()
+	else:
 		_drain_buffer()
 
 
@@ -102,23 +112,38 @@ func _accept_client() -> void:
 	if _client != null:
 		incoming.disconnect_from_host()  # single-client protocol
 		return
-	_game = get_tree().get_first_node_in_group(&"game_manager") as GameManager
-	if _game == null:
-		push_error("AIBridge: no GameManager in the scene; rejecting client.")
-		incoming.disconnect_from_host()
-		return
 	_client = incoming
 	_client.set_no_delay(true)
 	_buffer = ""
-	_attach_ai_control()
-	get_tree().paused = true
 	_send({
 		"type": "hello",
 		"version": PROTOCOL_VERSION,
 		"frames_per_step": FRAMES_PER_STEP,
 		"max_tracked_enemies": ObservationBuilder.MAX_TRACKED_ENEMIES,
+		"max_tracked_projectiles": ObservationBuilder.MAX_TRACKED_PROJECTILES,
 	})
-	print("AIBridge: client connected, simulation under AI control.")
+	_game = get_tree().get_first_node_in_group(&"game_manager") as GameManager
+	if _game != null:
+		_attach_ai_control()
+		get_tree().paused = true
+		print("AIBridge: client connected, simulation under AI control.")
+	else:
+		# The current scene has no arena (e.g. the main menu). Load it and
+		# attach once its GameManager is ready; messages buffer until then.
+		_pending_attach = true
+		get_tree().change_scene_to_file(GAME_SCENE_PATH)
+		print("AIBridge: client connected; loading arena scene for AI control.")
+
+
+func _try_complete_attach() -> void:
+	_game = get_tree().get_first_node_in_group(&"game_manager") as GameManager
+	if _game == null:
+		return  # arena still loading this frame; keep buffering client input
+	_pending_attach = false
+	_attach_ai_control()
+	get_tree().paused = true
+	print("AIBridge: arena ready, simulation under AI control.")
+	_drain_buffer()  # process anything that queued while loading
 
 
 func is_ai_active() -> bool:
@@ -137,6 +162,11 @@ func _attach_ai_control() -> void:
 	_game.spawner.wave_spawned.connect(_on_wave_spawned)
 
 	var player := _game.player
+	# Per-action shaping so berserk melee, dodging, and shooting can be nudged
+	# independently. Same signals the GameManager tallies for episode stats.
+	player.melee_weapon.attacked.connect(_on_melee_swing)
+	player.projectile_launcher.fired.connect(_on_shot_fired)
+	player.dashed.connect(_on_dash_used)
 	_human_provider = player.input_provider
 	_ai_provider = AIInputProvider.new()
 	_ai_provider.name = &"AIInputProvider"
@@ -150,6 +180,7 @@ func _drop_client() -> void:
 	_step_in_flight = false
 	_done = false
 	agent_name = ""
+	_pending_attach = false
 	if _game != null and is_instance_valid(_game):
 		_game.auto_restart = true
 		_game.ai_controlled = false
@@ -160,8 +191,13 @@ func _drop_client() -> void:
 		_disconnect_signal(_game.xp_collected, _on_xp_collected)
 		_disconnect_signal(_game.leveled_up, _on_leveled_up)
 		_disconnect_signal(_game.spawner.wave_spawned, _on_wave_spawned)
-		if _human_provider != null and is_instance_valid(_human_provider):
-			_game.player.input_provider = _human_provider
+		var player := _game.player
+		if player != null and is_instance_valid(player):
+			_disconnect_signal(player.melee_weapon.attacked, _on_melee_swing)
+			_disconnect_signal(player.projectile_launcher.fired, _on_shot_fired)
+			_disconnect_signal(player.dashed, _on_dash_used)
+			if _human_provider != null and is_instance_valid(_human_provider):
+				player.input_provider = _human_provider
 	if _ai_provider != null and is_instance_valid(_ai_provider):
 		_ai_provider.queue_free()
 	_ai_provider = null
@@ -209,6 +245,18 @@ func _on_leveled_up(_level: int) -> void:
 	_reward += _reward_config.level_up
 
 
+func _on_melee_swing() -> void:
+	_reward += _reward_config.melee_swing
+
+
+func _on_shot_fired() -> void:
+	_reward += _reward_config.shot_fired
+
+
+func _on_dash_used() -> void:
+	_reward += _reward_config.dash_used
+
+
 # --- protocol ---------------------------------------------------------------
 
 
@@ -241,6 +289,9 @@ func _handle_message(line: String) -> void:
 
 
 func _handle_reset(msg: Dictionary) -> void:
+	# Reloaded every episode so reward tweaks in the .tres take effect live,
+	# without restarting the training run.
+	_reward_config = _load_reward_config()
 	agent_name = String(msg.get("agent", "AI"))
 	_game.start_run(int(msg.get("seed", 0)))
 	_ai_provider.reset()
@@ -292,7 +343,15 @@ func _send_state(reward: float, done: bool) -> void:
 		"observation": ObservationBuilder.build(_game),
 		"reward": reward,
 		"done": done,
-		"info": {"kills": _game.kills, "time": _game.run_time, "wave": _game.get_wave()},
+		"info": {
+			"kills": _game.kills,
+			"time": _game.run_time,
+			"wave": _game.get_wave(),
+			"shots_fired": _game.shots_fired,
+			"dashes": _game.dashes,
+			"melee_swings": _game.melee_swings,
+			"upgrades": _game.acquired_upgrade_summary(),
+		},
 	})
 
 
@@ -304,7 +363,10 @@ func _send(message: Dictionary) -> void:
 
 func _load_reward_config() -> RewardConfig:
 	if ResourceLoader.exists(REWARD_CONFIG_PATH):
-		var config := load(REWARD_CONFIG_PATH)
+		# CACHE_MODE_IGNORE forces a fresh read from disk so edits made while
+		# training (in the editor or a text editor) are picked up each episode.
+		var config := ResourceLoader.load(
+			REWARD_CONFIG_PATH, "RewardConfig", ResourceLoader.CACHE_MODE_IGNORE)
 		if config is RewardConfig:
 			return config
 	return RewardConfig.new()

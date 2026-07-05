@@ -20,9 +20,15 @@ scripts/ai/observation_builder.gd:
     [15]    upgrade choice pending (0/1)
     [16:19] pending option encoding: (pool_index + 1) / upgrade_pool_size,
             0 = empty slot
-    [19:]   MAX_TRACKED_ENEMIES slots of
+    [19:59] MAX_TRACKED_ENEMIES slots of
             [present, local_x / arena_scale, local_z / arena_scale,
-             distance / arena_scale]
+             distance / arena_scale, health_fraction,
+             type one-hot: melee, tank, ranged]
+    [59:83] MAX_TRACKED_PROJECTILES slots of incoming enemy shots within
+            projectile_radius of the player:
+            [present, local_x / projectile_radius, local_z / projectile_radius,
+             local_vel_x / projectile_speed, local_vel_z / projectile_speed,
+             distance / projectile_radius]
 """
 from __future__ import annotations
 
@@ -34,10 +40,14 @@ import numpy as np
 from communication.godot_client import GodotClient
 
 MAX_TRACKED_ENEMIES = 5  # must match ObservationBuilder.MAX_TRACKED_ENEMIES
-ENEMY_FEATURES = 4
+ENEMY_FEATURES = 8
+ENEMY_TYPE_COUNT = 3  # melee=0, tank=1, ranged=2 (Enemy.TYPE_* in Godot)
+MAX_TRACKED_PROJECTILES = 4  # must match ObservationBuilder.MAX_TRACKED_PROJECTILES
+PROJECTILE_FEATURES = 6
 UPGRADE_OPTION_SLOTS = 3
 ENEMY_SLOTS_OFFSET = 19
-OBS_SIZE = ENEMY_SLOTS_OFFSET + MAX_TRACKED_ENEMIES * ENEMY_FEATURES
+PROJECTILE_SLOTS_OFFSET = ENEMY_SLOTS_OFFSET + MAX_TRACKED_ENEMIES * ENEMY_FEATURES
+OBS_SIZE = PROJECTILE_SLOTS_OFFSET + MAX_TRACKED_PROJECTILES * PROJECTILE_FEATURES
 
 
 class ValorEnv:
@@ -48,9 +58,11 @@ class ValorEnv:
         host: str = "127.0.0.1",
         port: int = 11008,
         max_episode_steps: int = 2000,
-        arena_scale: float = 20.0,
+        arena_scale: float = 28.0,
         max_speed: float = 5.0,
         upgrade_pool_size: int = 6,
+        projectile_radius: float = 12.0,  # ObservationBuilder.PROJECTILE_TRACK_RADIUS
+        projectile_speed: float = 20.0,   # fastest projectile scene's speed
         agent_name: str = "AI",
     ) -> None:
         self.client = GodotClient(host, port)
@@ -58,6 +70,8 @@ class ValorEnv:
         self.arena_scale = arena_scale
         self.max_speed = max_speed
         self.upgrade_pool_size = upgrade_pool_size
+        self.projectile_radius = projectile_radius
+        self.projectile_speed = projectile_speed
         self.agent_name = agent_name
         self._steps = 0
         self._connected = False
@@ -119,6 +133,19 @@ class ValorEnv:
             vector[base + 1] = enemy["position"][0] / self.arena_scale
             vector[base + 2] = enemy["position"][2] / self.arena_scale
             vector[base + 3] = enemy["distance"] / self.arena_scale
+            vector[base + 4] = enemy.get("health_fraction", 1.0)
+            enemy_type = int(enemy.get("type", 0))
+            if 0 <= enemy_type < ENEMY_TYPE_COUNT:
+                vector[base + 5 + enemy_type] = 1.0
+        for slot, projectile in enumerate(
+                obs.get("projectiles", [])[:MAX_TRACKED_PROJECTILES]):
+            base = PROJECTILE_SLOTS_OFFSET + slot * PROJECTILE_FEATURES
+            vector[base] = 1.0
+            vector[base + 1] = projectile["position"][0] / self.projectile_radius
+            vector[base + 2] = projectile["position"][2] / self.projectile_radius
+            vector[base + 3] = projectile["velocity"][0] / self.projectile_speed
+            vector[base + 4] = projectile["velocity"][2] / self.projectile_speed
+            vector[base + 5] = projectile["distance"] / self.projectile_radius
         return vector
 
     def __enter__(self) -> "ValorEnv":

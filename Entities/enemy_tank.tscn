@@ -1,0 +1,69 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Entities/enemy_base.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2_hlth"]
+[ext_resource type="Script" path="res://scripts/components/hurtbox.gd" id="3_hurtb"]
+[ext_resource type="Script" path="res://scripts/components/hitbox.gd" id="4_hitbx"]
+[ext_resource type="Script" path="res://scripts/ui/enemy_health_bar.gd" id="5_hpbar"]
+[ext_resource type="PackedScene" path="res://Entities/xp_orb.tscn" id="6_orb"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tank"]
+albedo_color = Color(0.55, 0.1, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tank"]
+material = SubResource("StandardMaterial3D_tank")
+size = Vector3(2, 2.4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(2, 2.4, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hurt"]
+size = Vector3(2.2, 2.6, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(2.6, 2.6, 2.6)
+
+[node name="EnemyTank" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_enemy")
+type_id = 1
+speed = 1.7
+xp_value = 15.0
+xp_orb_scene = ExtResource("6_orb")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("BoxMesh_tank")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2_hlth")
+max_health = 120.0
+
+[node name="Hurtbox" type="Area3D" parent="."]
+script = ExtResource("3_hurtb")
+faction = &"enemy"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("BoxShape3D_hurt")
+
+[node name="ContactHitbox" type="Area3D" parent="."]
+script = ExtResource("4_hitbx")
+damage = 20.0
+faction = &"enemy"
+continuous = true
+retrigger_interval = 1.2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ContactHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("BoxShape3D_hit")
+
+[node name="HealthBar" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+script = ExtResource("5_hpbar")
+width = 2.2

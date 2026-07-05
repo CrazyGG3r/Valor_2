@@ -69,6 +69,7 @@ def build_env(config: dict[str, Any], host: str, port: int | None, agent_name: s
         host=host,
         port=port if port is not None else env_config.get("port", 11008),
         max_episode_steps=env_config.get("max_episode_steps", 2000),
+        arena_scale=env_config.get("arena_scale", 28.0),
         upgrade_pool_size=env_config.get("upgrade_pool_size", 6),
         agent_name=agent_name,
     )

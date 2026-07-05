@@ -4,10 +4,13 @@
 [ext_resource type="PackedScene" uid="uid://b201jxalv8yne" path="res://Player/player.tscn" id="2_0xm2m"]
 [ext_resource type="Script" uid="uid://cbhuknsgp1kwf" path="res://scripts/camera_3d.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cq8jplnryfvgc" path="res://scripts/spawner.gd" id="4_1bvp3"]
-[ext_resource type="PackedScene" uid="uid://by53cs0pofken" path="res://Entities/enemy_base.tscn" id="5_lquwl"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_fast.tscn" id="5_fast"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_ranged.tscn" id="5_rngd"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_tank.tscn" id="5_tank"]
 [ext_resource type="Script" uid="uid://br8n2nyluew4q" path="res://scripts/game_manager.gd" id="6_gmngr"]
 [ext_resource type="PackedScene" path="res://UI/ui.tscn" id="7_ui"]
 [ext_resource type="Resource" path="res://configs/upgrades/upgrade_pool.tres" id="8_pool"]
+[ext_resource type="Script" uid="uid://p0wqf1cgtkbi" path="res://scripts/obstacle_field.gd" id="9_obst"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0xm2m"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -32,16 +35,16 @@ uv1_scale = Vector3(100, 100, 100)
 data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_wall_x"]
-size = Vector3(40.5, 3, 0.5)
+size = Vector3(56.5, 3, 0.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_x"]
-size = Vector3(40.5, 3, 0.5)
+size = Vector3(56.5, 3, 0.5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_wall_z"]
-size = Vector3(0.5, 3, 40.5)
+size = Vector3(0.5, 3, 56.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_z"]
-size = Vector3(0.5, 3, 40.5)
+size = Vector3(0.5, 3, 56.5)
 
 [node name="main" type="Node3D" unique_id=642484482]
 script = ExtResource("6_gmngr")
@@ -74,12 +77,18 @@ script = ExtResource("3_h2yge")
 
 [node name="Spawner" type="Node3D" parent="." unique_id=1998336213]
 script = ExtResource("4_1bvp3")
-enemy_scenes = Array[PackedScene]([ExtResource("5_lquwl")])
+melee_scene = ExtResource("5_fast")
+tank_scene = ExtResource("5_tank")
+ranged_scene = ExtResource("5_rngd")
+spawn_radius = 22.0
+
+[node name="ObstacleField" type="Node3D" parent="." unique_id=503624016]
+script = ExtResource("9_obst")
 
 [node name="Arena" type="Node3D" parent="." unique_id=1659790406]
 
 [node name="WallNorth" type="StaticBody3D" parent="Arena" unique_id=272303170]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -20)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -28)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallNorth" unique_id=1720606391]
 mesh = SubResource("BoxMesh_wall_x")
@@ -88,7 +97,7 @@ mesh = SubResource("BoxMesh_wall_x")
 shape = SubResource("BoxShape3D_wall_x")
 
 [node name="WallSouth" type="StaticBody3D" parent="Arena" unique_id=2130319131]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 20)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 28)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallSouth" unique_id=2046584394]
 mesh = SubResource("BoxMesh_wall_x")
@@ -97,7 +106,7 @@ mesh = SubResource("BoxMesh_wall_x")
 shape = SubResource("BoxShape3D_wall_x")
 
 [node name="WallEast" type="StaticBody3D" parent="Arena" unique_id=687644490]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1.5, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallEast" unique_id=226572448]
 mesh = SubResource("BoxMesh_wall_z")
@@ -106,7 +115,7 @@ mesh = SubResource("BoxMesh_wall_z")
 shape = SubResource("BoxShape3D_wall_z")
 
 [node name="WallWest" type="StaticBody3D" parent="Arena" unique_id=963649986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1.5, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallWest" unique_id=194790632]
 mesh = SubResource("BoxMesh_wall_z")

@@ -17,7 +17,10 @@ class RunLogger:
         self.directory.mkdir(parents=True, exist_ok=True)
         self._csv_file = open(self.directory / "episodes.csv", "w", newline="", encoding="utf-8")
         self._csv = csv.writer(self._csv_file)
-        self._csv.writerow(["episode", "reward", "steps", "kills", "wave", "time"])
+        self._csv.writerow([
+            "episode", "reward", "steps", "kills", "wave", "time",
+            "shots_fired", "dashes", "melee_swings", "upgrades",
+        ])
         self._tensorboard = None
         try:
             from torch.utils.tensorboard import SummaryWriter
@@ -29,16 +32,30 @@ class RunLogger:
         kills = info.get("kills", 0)
         wave = info.get("wave", 0)
         time_survived = info.get("time", 0.0)
+        shots_fired = info.get("shots_fired", 0)
+        dashes = info.get("dashes", 0)
+        melee_swings = info.get("melee_swings", 0)
+        upgrades = info.get("upgrades", []) or []
+        upgrades_text = "; ".join(str(entry) for entry in upgrades)
         print(
             f"[ep {episode:4d}] reward {reward:+8.2f} | steps {steps:5d} "
-            f"| kills {kills:3d} | wave {wave:3d} | survived {time_survived:6.1f}s"
+            f"| kills {kills:3d} | wave {wave:3d} | survived {time_survived:6.1f}s "
+            f"| shots {shots_fired:3d} | dashes {dashes:3d} | melee {melee_swings:3d}"
+            f"{' | upgrades ' + upgrades_text if upgrades_text else ''}"
         )
-        self._csv.writerow([episode, f"{reward:.4f}", steps, kills, wave, f"{time_survived:.2f}"])
+        self._csv.writerow([
+            episode, f"{reward:.4f}", steps, kills, wave, f"{time_survived:.2f}",
+            shots_fired, dashes, melee_swings, upgrades_text,
+        ])
         self._csv_file.flush()
         if self._tensorboard is not None:
             self._tensorboard.add_scalar("episode/reward", reward, episode)
             self._tensorboard.add_scalar("episode/steps", steps, episode)
             self._tensorboard.add_scalar("episode/wave", wave, episode)
+            self._tensorboard.add_scalar("episode/kills", kills, episode)
+            self._tensorboard.add_scalar("episode/shots_fired", shots_fired, episode)
+            self._tensorboard.add_scalar("episode/dashes", dashes, episode)
+            self._tensorboard.add_scalar("episode/melee_swings", melee_swings, episode)
 
     def log_metrics(self, metrics: dict[str, float], step: int) -> None:
         if self._tensorboard is not None:

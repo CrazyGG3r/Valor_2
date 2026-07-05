@@ -3,6 +3,8 @@ extends Node3D
 ## Spawns projectiles on a cooldown. Aim direction comes from the caller, so
 ## a human, an AI, or an enemy brain can all fire it the same way.
 
+signal fired
+
 @export var projectile_scene: PackedScene
 @export var cooldown := 0.35
 ## Overrides the projectile scene's damage so upgrades can buff it.
@@ -27,6 +29,7 @@ func try_fire(direction: Vector3) -> bool:
 	projectile.global_position = global_transform * muzzle_offset
 	projectile.damage = damage
 	projectile.launch(direction.normalized(), faction)
+	fired.emit()
 	return true
 
 

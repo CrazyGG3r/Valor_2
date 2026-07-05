@@ -26,9 +26,13 @@ signal upgrade_chosen(upgrade: Upgrade)
 
 @onready var player: Player = $Player
 @onready var spawner: EnemySpawner = $Spawner
+@onready var obstacle_field: ObstacleField = get_node_or_null(^"ObstacleField")
 
 var run_time := 0.0
 var kills := 0
+var shots_fired := 0
+var dashes := 0
+var melee_swings := 0
 var run_active := false
 ## Set by the AI bridge; suppresses the pause-driven human upgrade flow.
 var ai_controlled := false
@@ -54,6 +58,11 @@ func _ready() -> void:
 	player.level_system.xp_gained.connect(
 		func(amount: float, _total: float) -> void: xp_collected.emit(amount))
 	player.level_system.leveled_up.connect(_on_leveled_up)
+	# Action-usage tallies for episode stats. Only the player's components are
+	# connected, so enemy shots never count.
+	player.projectile_launcher.fired.connect(func() -> void: shots_fired += 1)
+	player.melee_weapon.attacked.connect(func() -> void: melee_swings += 1)
+	player.dashed.connect(func() -> void: dashes += 1)
 	spawner.enemy_spawned.connect(_on_enemy_spawned)
 	start_run()
 
@@ -66,6 +75,9 @@ func _physics_process(delta: float) -> void:
 func start_run(seed_value: int = 0) -> void:
 	run_time = 0.0
 	kills = 0
+	shots_fired = 0
+	dashes = 0
+	melee_swings = 0
 	pending_upgrade_options = []
 	_pending_level_ups = 0
 	_upgrade_stacks.clear()
@@ -75,11 +87,16 @@ func start_run(seed_value: int = 0) -> void:
 		_upgrade_rng.seed = seed_value + 1  # decorrelated from the spawner stream
 	for orb in get_tree().get_nodes_in_group(&"xp_orbs"):
 		orb.queue_free()
+	for projectile in get_tree().get_nodes_in_group(&"projectiles"):
+		projectile.queue_free()
 	player.global_transform = _initial_player_transform
 	player.velocity = Vector3.ZERO
 	player.reset_stats()
 	player.health.reset()
 	player.level_system.reset()
+	# Obstacles first: the spawner rejects spawn points inside them.
+	if obstacle_field != null:
+		obstacle_field.generate(seed_value)
 	spawner.restart(seed_value)
 	run_active = true
 	if not ai_controlled:
@@ -195,7 +212,14 @@ func _on_enemy_spawned(enemy: Node3D) -> void:
 func _on_player_died() -> void:
 	run_active = false
 	spawner.stop()
-	run_ended.emit({"time": run_time, "kills": kills, "wave": spawner.wave_index})
+	run_ended.emit({
+		"time": run_time,
+		"kills": kills,
+		"wave": spawner.wave_index,
+		"shots_fired": shots_fired,
+		"dashes": dashes,
+		"melee_swings": melee_swings,
+	})
 	if auto_restart:
 		get_tree().create_timer(restart_delay).timeout.connect(
 			func() -> void:

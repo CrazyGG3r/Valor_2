@@ -19,7 +19,7 @@
     "priority_alpha": 0.5,
     "priority_beta_start": 0.4,
     "priority_beta_steps": 100000,
-    "device": "cpu"
+    "device": "auto"
   },
   "training": {
     "checkpoint_every": 25

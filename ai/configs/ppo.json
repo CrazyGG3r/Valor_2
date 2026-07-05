@@ -14,7 +14,7 @@
     "update_epochs": 4,
     "entropy_coef": 0.01,
     "value_coef": 0.5,
-    "device": "cpu"
+    "device": "auto"
   },
   "training": {
     "checkpoint_every": 25

@@ -1,8 +1,19 @@
 class_name Enemy
 extends CharacterBody3D
 ## Base enemy: chases the player. Contact damage is dealt by the continuous
-## Hitbox child; death comes from the HealthComponent child. Movement styles
-## and attack patterns become subclasses/components later.
+## Hitbox child; death comes from the HealthComponent child. Subclasses
+## override _movement_direction() for other movement styles (see
+## enemy_ranged.gd).
+
+## Observation type ids sent to the AI. Keep in sync with the one-hot
+## encoding in ai/environments/valor_env.py.
+const TYPE_MELEE := 0
+const TYPE_TANK := 1
+const TYPE_RANGED := 2
+
+@export_group("Identity")
+## What the AI observation reports this enemy as (TYPE_* constants).
+@export var type_id := TYPE_MELEE
 
 @export_group("Movement")
 @export var speed := 3.0
@@ -19,6 +30,12 @@ var _target: Node3D
 
 func _ready() -> void:
 	health.died.connect(_on_died)
+
+
+func health_fraction() -> float:
+	if health == null or health.max_health <= 0.0:
+		return 0.0
+	return health.health / health.max_health
 
 
 func _on_died() -> void:
@@ -39,14 +56,20 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = 0.0
 
-	velocity.x = 0.0
-	velocity.z = 0.0
-	if _target != null:
-		var to_target := _target.global_position - global_position
-		to_target.y = 0.0
-		if to_target.length_squared() > 0.0001:
-			var direction := to_target.normalized()
-			velocity.x = direction.x * speed
-			velocity.z = direction.z * speed
+	var direction := _movement_direction()
+	velocity.x = direction.x * speed
+	velocity.z = direction.z * speed
 
 	move_and_slide()
+
+
+## Unit XZ direction this enemy wants to move in. Base behavior: chase the
+## player. Subclasses override for kiting/stationary behavior.
+func _movement_direction() -> Vector3:
+	if _target == null:
+		return Vector3.ZERO
+	var to_target := _target.global_position - global_position
+	to_target.y = 0.0
+	if to_target.length_squared() <= 0.0001:
+		return Vector3.ZERO
+	return to_target.normalized()

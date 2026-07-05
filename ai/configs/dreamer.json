@@ -23,7 +23,7 @@
     "train_every": 16,
     "warmup_episodes": 5,
     "capacity": 100000,
-    "device": "cpu"
+    "device": "auto"
   },
   "training": {
     "checkpoint_every": 25
