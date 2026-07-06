@@ -1,0 +1,144 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://bl5m2beo762mi" path="res://Tilemap.png" id="1_floor"]
+[ext_resource type="PackedScene" uid="uid://b201jxalv8yne" path="res://Player/player.tscn" id="2_plyr"]
+[ext_resource type="Script" uid="uid://cbhuknsgp1kwf" path="res://scripts/camera_3d.gd" id="3_cam"]
+[ext_resource type="Script" uid="uid://cq8jplnryfvgc" path="res://scripts/spawner.gd" id="4_spwn"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_base.tscn" id="5_base"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_ranged.tscn" id="5_rngd"]
+[ext_resource type="PackedScene" path="res://Entities/enemy_tank.tscn" id="5_tank"]
+[ext_resource type="Script" uid="uid://br8n2nyluew4q" path="res://scripts/game_manager.gd" id="6_gmngr"]
+[ext_resource type="PackedScene" path="res://UI/ui.tscn" id="7_ui"]
+[ext_resource type="Resource" path="res://configs/upgrades/upgrade_pool.tres" id="8_pool"]
+[ext_resource type="Script" path="res://scripts/chaos/chaos_director.gd" id="9_chaos"]
+[ext_resource type="PackedScene" path="res://Chaos/events/lightning_event.tscn" id="10_light"]
+[ext_resource type="PackedScene" path="res://Chaos/events/spike_event.tscn" id="11_spike"]
+[ext_resource type="PackedScene" path="res://Chaos/events/meteor_event.tscn" id="12_meteor"]
+[ext_resource type="PackedScene" path="res://Chaos/events/laser_sweep_event.tscn" id="13_laser"]
+[ext_resource type="PackedScene" path="res://Chaos/events/shockwave_event.tscn" id="14_shock"]
+[ext_resource type="PackedScene" path="res://Chaos/events/vortex_event.tscn" id="15_vortex"]
+[ext_resource type="PackedScene" path="res://Chaos/events/hunter_orb_event.tscn" id="16_orb"]
+[ext_resource type="PackedScene" path="res://Chaos/events/purge_event.tscn" id="17_purge"]
+[ext_resource type="PackedScene" path="res://Chaos/events/turbine_event.tscn" id="18_turbine"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_chaos"]
+sky_top_color = Color(0.22, 0.14, 0.16, 1)
+sky_horizon_color = Color(0.72, 0.45, 0.38, 1)
+ground_horizon_color = Color(0.72, 0.45, 0.38, 1)
+ground_bottom_color = Color(0.12, 0.08, 0.08, 1)
+
+[sub_resource type="Sky" id="Sky_chaos"]
+sky_material = SubResource("ProceduralSkyMaterial_chaos")
+
+[sub_resource type="Environment" id="Environment_chaos"]
+background_mode = 2
+sky = SubResource("Sky_chaos")
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_texture = ExtResource("1_floor")
+roughness_texture = ExtResource("1_floor")
+uv1_scale = Vector3(100, 100, 100)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_floor"]
+data = PackedVector3Array(1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_x"]
+size = Vector3(56.5, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_x"]
+size = Vector3(56.5, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_z"]
+size = Vector3(0.5, 3, 56.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_z"]
+size = Vector3(0.5, 3, 56.5)
+
+[node name="main_chaos" type="Node3D"]
+script = ExtResource("6_gmngr")
+upgrade_pool = ExtResource("8_pool")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+light_color = Color(1, 0.87, 0.8, 1)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_chaos")
+
+[node name="floor" type="StaticBody3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="floor"]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -0.05, 0)
+mesh = SubResource("PlaneMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="floor"]
+transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -0.05, 0)
+shape = SubResource("ConcavePolygonShape3D_floor")
+
+[node name="Player" parent="." instance=ExtResource("2_plyr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5472081, 0.94605255, 0.30609822)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.7807059, 0.6248986, 0, -0.6248986, 0.7807059, 0.67804575, 3.4332993, 4.1805973)
+script = ExtResource("3_cam")
+
+[node name="Spawner" type="Node3D" parent="."]
+script = ExtResource("4_spwn")
+melee_scene = ExtResource("5_base")
+tank_scene = ExtResource("5_tank")
+ranged_scene = ExtResource("5_rngd")
+spawn_radius = 22.0
+spawn_count = 3
+spawn_count_growth = 0.25
+spawn_interval = 8.0
+max_alive = 12
+
+[node name="ChaosDirector" type="Node3D" parent="."]
+script = ExtResource("9_chaos")
+event_scenes = Array[PackedScene]([ExtResource("10_light"), ExtResource("11_spike"), ExtResource("12_meteor"), ExtResource("13_laser"), ExtResource("14_shock"), ExtResource("15_vortex"), ExtResource("16_orb"), ExtResource("17_purge"), ExtResource("18_turbine")])
+arena_half_extent = 24.0
+
+[node name="Arena" type="Node3D" parent="."]
+
+[node name="WallNorth" type="StaticBody3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -28)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallNorth"]
+mesh = SubResource("BoxMesh_wall_x")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallNorth"]
+shape = SubResource("BoxShape3D_wall_x")
+
+[node name="WallSouth" type="StaticBody3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 28)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallSouth"]
+mesh = SubResource("BoxMesh_wall_x")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallSouth"]
+shape = SubResource("BoxShape3D_wall_x")
+
+[node name="WallEast" type="StaticBody3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1.5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallEast"]
+mesh = SubResource("BoxMesh_wall_z")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallEast"]
+shape = SubResource("BoxShape3D_wall_z")
+
+[node name="WallWest" type="StaticBody3D" parent="Arena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1.5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WallWest"]
+mesh = SubResource("BoxMesh_wall_z")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WallWest"]
+shape = SubResource("BoxShape3D_wall_z")
+
+[node name="UI" parent="." instance=ExtResource("7_ui")]

@@ -3,20 +3,20 @@ extends Control
 ## and the LEADERBOARD pages are both generated from MODES, so the whole
 ## front-end stays in sync as modes come online -- adding a mode is one entry.
 
-const GAME_SCENE_PATH := "res://main.tscn"
-
 ## Single source of truth for game modes. `implemented` gates whether selecting
 ## the mode launches a run or shows a "coming soon" placeholder, and drives the
-## leaderboard page content.
+## leaderboard page content. Implemented modes carry the scene they launch.
 const MODES: Array[Dictionary] = [
 	{"id": "ai_only", "label": "AI ONLY", "implemented": true,
+		"scene": "res://main.tscn",
 		"blurb": "Watch a trained agent clear the arena."},
 	{"id": "coop", "label": "COOP", "implemented": false,
 		"blurb": "Two players, one arena. Coming soon."},
 	{"id": "multi_coop", "label": "MULTI-COOP", "implemented": false,
 		"blurb": "Bigger squads, bigger swarms. Coming soon."},
-	{"id": "chaos", "label": "CHAOS", "implemented": false,
-		"blurb": "All rules off. Coming soon."},
+	{"id": "chaos", "label": "CHAOS", "implemented": true,
+		"scene": "res://main_chaos.tscn",
+		"blurb": "The arena itself is trying to kill you. Survive."},
 ]
 
 @onready var _mode_panel: PanelContainer = $ModePanel
@@ -76,9 +76,7 @@ func _build_leaderboard_tabs() -> void:
 
 func _on_mode_selected(mode: Dictionary) -> void:
 	if bool(mode["implemented"]):
-		# TODO(coop): route each implemented mode to its own setup instead of
-		# always loading the single-arena scene.
-		get_tree().change_scene_to_file(GAME_SCENE_PATH)
+		get_tree().change_scene_to_file(String(mode["scene"]))
 	else:
 		_show_placeholder(String(mode["label"]), String(mode["blurb"]))
 

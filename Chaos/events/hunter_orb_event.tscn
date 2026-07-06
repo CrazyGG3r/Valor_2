@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/chaos/events/hunter_orb_event.gd" id="1_orb"]
+
+[node name="HunterOrbEvent" type="Node3D"]
+script = ExtResource("1_orb")

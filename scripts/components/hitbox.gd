@@ -12,6 +12,10 @@ extends Area3D
 
 const HURTBOX_LAYER := 8  # physics layer 4
 
+## Emitted whenever a hit is accepted (target alive, not invulnerable).
+## Lets owners react to landed hits (e.g. chaos spikes knocking targets up).
+signal hit_landed(hurtbox: Hurtbox)
+
 @export var damage := 10.0
 @export var faction := &"neutral"
 @export var continuous := false
@@ -62,3 +66,4 @@ func _physics_process(delta: float) -> void:
 			continue
 		if hurtbox.receive_hit(damage, self):
 			_targets[key] = retrigger_interval if continuous else 1.0
+			hit_landed.emit(hurtbox)
